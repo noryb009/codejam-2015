@@ -16,7 +16,8 @@
   (define larger (max R C))
   (and (not (or (>= X 7)
                 (not (= (modulo (* R C) X) 0))
-                (< larger X)))
+                (< larger X)
+                (and (= X 5) (= larger 5) (= smaller 3))))
        (>= smaller (match X
                      [1 1]
                      [2 1]
