@@ -7,53 +7,33 @@
    0
    M))
 
-(define (find-time M N)
-  (define step (expt 2 30))
-  (define current 0)
-  
-  (let loop ()
-    (set! current (+ current step))
-    (define c (cust-after-time M current))
-    (unless (>= c N)
-      (loop)))
-  
-  (set! current (- current step))
-  (set! step (/ step 2))
-  
-  (let loop ()
-    (unless (< step 1)
-      (define c (cust-after-time M (+ current step)))
-      (if (< c N)
-          (set! current (+ current step))
-          (void))
-      (set! step (/ step 2))
-      (loop)))
-  
-  current)
-
-(define (run B N M)
-  #|(define (find-time current growth backtracking)
-    (define c (cust-after-time M current))
+(define (binary-search get-val valid)
+  (define (binary/bounded l u)
     (cond
-      [backtracking
+      [(< l (sub1 u))
+       (define mid (floor (/ (+ l u) 2)))
        (cond
-         [(<= growth 1)
-          (if (> c N)
-              (sub1 current)
-              current)]
-         [(>= c N)
-          (find-time (- current (/ growth 2)) (/ growth 2) true)]
+         [(valid mid)
+          (binary/bounded mid u)]
          [else
-          (find-time (+ current (/ growth 2)) (/ growth 2) true)])]
-      [(>= c N)
-       (if (<= growth 1)
-           (if (> c N)
-              (sub1 current)
-              current)
-           (find-time (- current (/ growth 2)) (/ growth 2) true))]
+          (binary/bounded l mid)])]
+      [(valid l) l]
+      [else u]))
+  (define (binary/inner c g)
+    (define val (get-val c))
+    (cond
+      [(valid val)
+       (binary/inner (+ c g) (* g 2))]
       [else
-       (find-time (+ current growth) (* growth 2) false)]))|#
-  (define (free-on-nth-min M n line count)
+       (binary/bounded 0 c)]))
+  (binary/inner 0 1))
+
+(define (find-time M N)
+  (binary-search
+   (lambda (t) (cust-after-time M t))
+   (lambda (c) (>= c N))))
+
+(define (free-on-nth-min M n line count)
     (cond
       [(empty? M) 1]
       [(zero? (modulo n (first M)))
@@ -61,13 +41,14 @@
            count
            (free-on-nth-min (rest M) n (sub1 line) (add1 count)))]
       [else (free-on-nth-min (rest M) n line (add1 count))]))
+
+(define (run B N M)
   (define time
-    (find-time M N))
+    (find-time M N 0 1 false))
   (cond
     [(<= N B) N]
     [else
      (free-on-nth-min M time (- N (cust-after-time M time)) 1)]))
-  
 
 (define T (read))
 
